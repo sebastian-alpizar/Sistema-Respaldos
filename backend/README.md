@@ -33,36 +33,36 @@ El proyecto implementa un patrón de **Arquitectura en Capas** que separa claram
 ├── 📁 backend/
 │   ├── 📁 __pycache__/ 🚫 (auto-hidden)
 │   ├── 📁 app/
-│   │   ├── 📁 api/
-│   │   │   ├── 🐍 __init__.py
-│   │   │   ├── 🐍 routes_backup.py
-│   │   │   ├── 🐍 routes_logs.py
-│   │   │   └── 🐍 routes_system.py
-│   │   ├── 📁 core/
-│   │   │   ├── 🐍 config.py
-│   │   │   ├── 🐍 email_utils.py
-│   │   │   └── 🐍 scheduler.py
-│   │   ├── 📁 models/
-│   │   │   ├── 🐍 log.py
-│   │   │   ├── 🐍 strategy.py
-│   │   │   └── 🐍 user.py
-│   │   ├── 📁 repositories/
-│   │   │   ├── 🐍 log_repo.py
-│   │   │   ├── 🐍 strategy_repo.py
-│   │   │   └── 🐍 user_repo.py
-│   │   ├── 📁 services/
-│   │   │   ├── 🐍 backup_service.py
-│   │   │   ├── 🐍 email_service.py
-│   │   │   ├── 🐍 log_service.py
-│   │   │   └── 🐍 oracle_service.py
-│   │   └── 📁 utils/
-│   │       ├── 🐍 file_utils.py
-│   │       └── 🐍 oracle_connection.py
-│   ├── 📁 venv/ 🚫 (auto-hidden)
-│   ├── 🔒 .env 🚫 (auto-hidden)
-│   ├── 📖 README.md
-│   ├── 🐍 main.py
-│   └── 📄 requirements.txt
+│   │   ├── 📁 api/                          # 🎯 Endpoints REST API
+│   │   │   ├── 🐍 __init__.py               # Inicialización del módulo API
+│   │   │   ├── 🐍 routes_backup.py          # Rutas para gestión de respaldos
+│   │   │   ├── 🐍 routes_logs.py            # Rutas para consulta de bitácoras
+│   │   │   └── 🐍 routes_system.py          # Rutas para configuración del sistema
+│   │   ├── 📁 core/                         # 🔧 Configuración y componentes centrales
+│   │   │   ├── 🐍 config.py                 # Configuración de la aplicación
+│   │   │   ├── 🐍 email_utils.py            # Utilidades para envío de correos
+│   │   │   └── 🐍 scheduler.py              # Programador de tareas automáticas
+│   │   ├── 📁 models/                       # 🗃️ Modelos de datos y esquemas
+│   │   │   ├── 🐍 log.py                    # Modelo de registro de bitácoras
+│   │   │   ├── 🐍 strategy.py               # Modelo de estrategias de respaldo
+│   │   │   └── 🐍 user.py                   # Modelo de usuarios y autenticación
+│   │   ├── 📁 repositories/                 # 💾 Acceso a base de datos
+│   │   │   ├── 🐍 log_repo.py               # Operaciones CRUD para registros
+│   │   │   ├── 🐍 strategy_repo.py          # Operaciones CRUD para estrategias
+│   │   │   └── 🐍 user_repo.py              # Operaciones CRUD para usuarios
+│   │   ├── 📁 services/                     # ⚙️ Lógica de negocio principal
+│   │   │   ├── 🐍 backup_service.py         # Servicio de ejecución de respaldos
+│   │   │   ├── 🐍 email_service.py          # Servicio de notificaciones por email
+│   │   │   ├── 🐍 log_service.py            # Servicio de gestión de bitácoras
+│   │   │   └── 🐍 oracle_service.py         # Servicio de conexión y consultas Oracle
+│   │   └── 📁 utils/                        # 🛠️ Utilidades y helpers
+│   │       ├── 🐍 file_utils.py             # Utilidades para manejo de archivos
+│   │       └── 🐍 oracle_connection.py      # Gestión de conexiones a Oracle
+│   ├── 📁 venv/ 🚫 (auto-hidden)            # Entorno virtual de Python
+│   ├── 🔒 .env 🚫 (auto-hidden)             # Variables de entorno
+│   ├── 📖 README.md                         # Documentación del backend
+│   ├── 🐍 main.py                           # 🚀 Punto de entrada de la aplicación
+│   └── 📄 requirements.txt                  # Dependencias de Python
 
 ```
 
