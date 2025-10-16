@@ -116,13 +116,11 @@ Si no tienes Rust instalado:
     ```
     *(Alternativamente, puedes instalar las principales manualmente: `pip install fastapi uvicorn[standard] sqlalchemy cx_Oracle apscheduler aiosmtplib python-dotenv`)*
 
-## 🔧 Configuración del Entorno Virtual en VS Code
+### 3. Configuración del Entorno Virtual en VS Code
 
 Para evitar advertencias de importación y asegurar un desarrollo fluido, configura el entorno virtual en tu editor.
 
----
-
-4.  Seleccionar el Intérprete en Python
+1.  Seleccionar el Intérprete en Python
 
 #### 🔹 Abrir la Paleta de Comandos
 - Presiona `Ctrl + Shift + P` en VS Code  
@@ -144,7 +142,7 @@ Para evitar advertencias de importación y asegurar un desarrollo fluido, config
 
 ---
 
-5.  Configuración de Variables de Entorno
+### 4. Configuración de Variables de Entorno
 
 Crea un archivo **`.env`** en la raíz del directorio **`backend/`** con las siguientes variables:
 
