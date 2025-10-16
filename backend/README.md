@@ -101,7 +101,7 @@ Si no tienes Rust instalado:
     cd backend
     ```
 
-2.  ** Crea y activa un entorno virtual:**
+2.  Crea y activa un entorno virtual:
     ```bash
     # Crear entorno
     python -m venv venv
@@ -138,7 +138,6 @@ Seleccionar el Intérprete en Python:
 #### Verificar la Configuración
 - En la esquina inferior derecha de VS Code, deberías ver algo como:  
   `Python 3.x.x ('venv': venv)`
-
 
 ### 4. Configuración de Variables de Entorno
 
