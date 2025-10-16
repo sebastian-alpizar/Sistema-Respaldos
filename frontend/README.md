@@ -25,44 +25,54 @@ El frontend está organizado por tipo de responsabilidad, lo que permite que el 
 6.  La aplicación consulta las bitácoras en tiempo real (mediante *polling* o *WebSocket* opcional) para mantener actualizado el **Component** `LogTable.jsx`.
 7.  En **SettingsPage**, el frontend interactúa con `systemService.js` para modificar parámetros como el modo `ARCHIVELOG` o la configuración SMTP del backend.
 
-## 📁 Estructura del Directorio (`src/`)
+## 📁 Estructura del Directorio
 
+```
+📁 sistema-respaldos/
 ├── 📁 frontend/
-│ ├── 📁 src/
-│ │ ├── 📁 api/
-│ │ │ ├── 📄 apiClient.js
-│ │ │ ├── 📄 backupService.js
-│ │ │ ├── 📄 logService.js
-│ │ │ └── 📄 systemService.js
-│ │ ├── 📁 components/
-│ │ │ ├── 📄 BackupForm.jsx
-│ │ │ ├── 📄 BackupList.jsx
-│ │ │ ├── 📄 LogTable.jsx
-│ │ │ ├── 📄 NotificationSnackbar.jsx
-│ │ │ └── 📄 SchedulerDialog.jsx
-│ │ ├── 📁 context/
-│ │ │ ├── 📄 AuthContext.jsx
-│ │ │ ├── 📄 ConfigContext.jsx
-│ │ │ └── 📄 SchedulerContext.jsx
-│ │ ├── 📁 hooks/
-│ │ │ └── 📄 useFetch.js
-│ │ ├── 📁 pages/
-│ │ │ ├── 📄 ArchiveModeWarning.jsx
-│ │ │ ├── 📄 BackupsPage.jsx
-│ │ │ ├── 📄 Dashboard.jsx
-│ │ │ ├── 📄 LogsPage.jsx
-│ │ │ └── 📄 SettingsPage.jsx
-│ │ ├── 📁 styles/
-│ │ │ └── 🎨 global.css
-│ │ ├── 📁 utils/
-│ │ │ └── 📄 formatDate.js
-│ │ ├── 📄 App.jsx
-│ │ ├── 📄 index.js
-│ │ └── 📄 routes.js
-│ ├── 📖 README.md
-│ └── 📄 vite.config.js
-
----
+│   ├── 📁 src/
+│   │   ├── 📁 api/
+│   │   │   ├── 📄 apiClient.js
+│   │   │   ├── 📄 backupService.js
+│   │   │   ├── 📄 logService.js
+│   │   │   └── 📄 systemService.js
+│   │   ├── 📁 components/
+│   │   │   ├── 📄 BackupForm.jsx
+│   │   │   ├── 📄 BackupList.jsx
+│   │   │   ├── 📄 LogTable.jsx
+│   │   │   ├── 📄 NotificationSnackbar.jsx
+│   │   │   └── 📄 SchedulerDialog.jsx
+│   │   ├── 📁 context/
+│   │   │   ├── 📄 AuthContext.jsx
+│   │   │   ├── 📄 ConfigContext.jsx
+│   │   │   └── 📄 SchedulerContext.jsx
+│   │   ├── 📁 hooks/
+│   │   │   └── 📄 useFetch.js
+│   │   ├── 📁 pages/
+│   │   │   ├── 📄 ArchiveModeWarning.jsx
+│   │   │   ├── 📄 BackupsPage.jsx
+│   │   │   ├── 📄 Dashboard.jsx
+│   │   │   ├── 📄 LogsPage.jsx
+│   │   │   └── 📄 SettingsPage.jsx
+│   │   ├── 📁 styles/
+│   │   │   └── 🎨 global.css
+│   │   ├── 📁 utils/
+│   │   │   └── 📄 formatDate.js
+│   │   ├── 📄 App.jsx
+│   │   ├── 📄 index.js
+│   │   └── 📄 routes.js
+│   ├── 📖 README.md
+│   └── 📄 vite.config.js
+├── 📁 backend/
+│   ├── 📁 src/
+│   │   ├── 📁 models/
+│   │   ├── 📁 routes/
+│   │   ├── 📁 services/
+│   │   └── 📄 main.py
+│   ├── 📄 requirements.txt
+│   └── 📄 .env
+└── 📖 README.md
+```
 
 ## 🚀 Configuración y Ejecución
 
