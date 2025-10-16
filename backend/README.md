@@ -128,8 +128,6 @@ Seleccionar el Intérprete en Python:
 #### Seleccionar la Ruta del Intérprete
 - Selecciona: `Enter interpreter path...`  
 - Elige: `Find...`
-
-#### Navegar al Entorno Virtual
 - Ve a la carpeta en donde tienes el proyecto:  
   `C:\Users\sebas\Downloads\Sistema-Respaldos\backend\venv\Scripts`
 - Selecciona el archivo:  
