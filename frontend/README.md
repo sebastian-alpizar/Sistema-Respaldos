@@ -31,38 +31,38 @@ El frontend está organizado por tipo de responsabilidad, lo que permite que el 
 📁 sistema-respaldos/
 ├── 📁 frontend/
 │   ├── 📁 src/
-│   │   ├── 📁 api/
-│   │   │   ├── 📄 apiClient.js
-│   │   │   ├── 📄 backupService.js
-│   │   │   ├── 📄 logService.js
-│   │   │   └── 📄 systemService.js
-│   │   ├── 📁 components/
-│   │   │   ├── 📄 BackupForm.jsx
-│   │   │   ├── 📄 BackupList.jsx
-│   │   │   ├── 📄 LogTable.jsx
-│   │   │   ├── 📄 NotificationSnackbar.jsx
-│   │   │   └── 📄 SchedulerDialog.jsx
-│   │   ├── 📁 context/
-│   │   │   ├── 📄 AuthContext.jsx
-│   │   │   ├── 📄 ConfigContext.jsx
-│   │   │   └── 📄 SchedulerContext.jsx
-│   │   ├── 📁 hooks/
-│   │   │   └── 📄 useFetch.js
-│   │   ├── 📁 pages/
-│   │   │   ├── 📄 ArchiveModeWarning.jsx
-│   │   │   ├── 📄 BackupsPage.jsx
-│   │   │   ├── 📄 Dashboard.jsx
-│   │   │   ├── 📄 LogsPage.jsx
-│   │   │   └── 📄 SettingsPage.jsx
-│   │   ├── 📁 styles/
-│   │   │   └── 🎨 global.css
-│   │   ├── 📁 utils/
-│   │   │   └── 📄 formatDate.js
-│   │   ├── 📄 App.jsx
-│   │   ├── 📄 index.js
-│   │   └── 📄 routes.js
-│   ├── 📖 README.md
-│   └── 📄 vite.config.js
+│   │   ├── 📁 api/                          # 🌐 Servicios de comunicación con backend
+│   │   │   ├── 📄 apiClient.js              # Cliente HTTP configurado para API
+│   │   │   ├── 📄 backupService.js          # Servicio para operaciones de respaldo
+│   │   │   ├── 📄 logService.js             # Servicio para consulta de registros
+│   │   │   └── 📄 systemService.js          # Servicio para configuración del sistema
+│   │   ├── 📁 components/                   # 🧩 Componentes reutilizables de UI
+│   │   │   ├── 📄 BackupForm.jsx            # Formulario de creación de estrategias
+│   │   │   ├── 📄 BackupList.jsx            # Lista y gestión de respaldos
+│   │   │   ├── 📄 LogTable.jsx              # Tabla de visualización de bitácoras
+│   │   │   ├── 📄 NotificationSnackbar.jsx  # Componente de notificaciones toast
+│   │   │   └── 📄 SchedulerDialog.jsx       # Diálogo para programación de tareas
+│   │   ├── 📁 context/                      # 🎮 Estado global de la aplicación
+│   │   │   ├── 📄 AuthContext.jsx           # Contexto de autenticación y usuario
+│   │   │   ├── 📄 ConfigContext.jsx         # Contexto de configuración del sistema
+│   │   │   └── 📄 SchedulerContext.jsx      # Contexto de programación de tareas
+│   │   ├── 📁 hooks/                        # 🪝 Custom React Hooks
+│   │   │   └── 📄 useFetch.js               # Hook para peticiones HTTP
+│   │   ├── 📁 pages/                        # 🖥️ Páginas principales de la aplicación
+│   │   │   ├── 📄 ArchiveModeWarning.jsx    # Advertencia modo ARCHIVELOG
+│   │   │   ├── 📄 BackupsPage.jsx           # Página de gestión de respaldos
+│   │   │   ├── 📄 Dashboard.jsx             # Panel principal de control
+│   │   │   ├── 📄 LogsPage.jsx              # Página de visualización de bitácoras
+│   │   │   └── 📄 SettingsPage.jsx          # Página de configuración
+│   │   ├── 📁 styles/                       # 🎨 Estilos y temas
+│   │   │   └── 🎨 global.css                # Estilos globales de la aplicación
+│   │   ├── 📁 utils/                        # 🔧 Utilidades de frontend
+│   │   │   └── 📄 formatDate.js             # Utilidades de formateo de fechas
+│   │   ├── 📄 App.jsx                       # 🎪 Componente raíz de la aplicación
+│   │   ├── 📄 index.js                      # ⚡ Punto de entrada de React
+│   │   └── 📄 routes.js                     # 🗺️ Configuración de rutas y navegación
+│   ├── 📖 README.md                         # Documentación del frontend
+│   └── 📄 vite.config.js                    # ⚒️ Configuración de Vite
 
 ```
 
