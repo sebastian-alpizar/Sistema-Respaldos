@@ -89,7 +89,7 @@ Si el directorio `frontend/` aún no existe o está vacío, puedes inicializarlo
     ```
     * **Project name:** `frontend`
     * **Framework:** `React`
-    * **Variant:** `JavaScript` (o `TypeScript` si es tu elección)
+    * **Variant:** `JavaScript`
 
 ### 3. Instalación de Dependencias
 
