@@ -28,39 +28,39 @@ El frontend está organizado por tipo de responsabilidad, lo que permite que el 
 ## 📁 Estructura del Directorio (`src/`)
 
 ├── 📁 frontend/
-│   ├── 📁 src/
-│   │   ├── 📁 api/
-│   │   │   ├── 📄 apiClient.js
-│   │   │   ├── 📄 backupService.js
-│   │   │   ├── 📄 logService.js
-│   │   │   └── 📄 systemService.js
-│   │   ├── 📁 components/
-│   │   │   ├── 📄 BackupForm.jsx
-│   │   │   ├── 📄 BackupList.jsx
-│   │   │   ├── 📄 LogTable.jsx
-│   │   │   ├── 📄 NotificationSnackbar.jsx
-│   │   │   └── 📄 SchedulerDialog.jsx
-│   │   ├── 📁 context/
-│   │   │   ├── 📄 AuthContext.jsx
-│   │   │   ├── 📄 ConfigContext.jsx
-│   │   │   └── 📄 SchedulerContext.jsx
-│   │   ├── 📁 hooks/
-│   │   │   └── 📄 useFetch.js
-│   │   ├── 📁 pages/
-│   │   │   ├── 📄 ArchiveModeWarning.jsx
-│   │   │   ├── 📄 BackupsPage.jsx
-│   │   │   ├── 📄 Dashboard.jsx
-│   │   │   ├── 📄 LogsPage.jsx
-│   │   │   └── 📄 SettingsPage.jsx
-│   │   ├── 📁 styles/
-│   │   │   └── 🎨 global.css
-│   │   ├── 📁 utils/
-│   │   │   └── 📄 formatDate.js
-│   │   ├── 📄 App.jsx
-│   │   ├── 📄 index.js
-│   │   └── 📄 routes.js
-│   ├── 📖 README.md
-│   └── 📄 vite.config.js
+│ ├── 📁 src/
+│ │ ├── 📁 api/
+│ │ │ ├── 📄 apiClient.js
+│ │ │ ├── 📄 backupService.js
+│ │ │ ├── 📄 logService.js
+│ │ │ └── 📄 systemService.js
+│ │ ├── 📁 components/
+│ │ │ ├── 📄 BackupForm.jsx
+│ │ │ ├── 📄 BackupList.jsx
+│ │ │ ├── 📄 LogTable.jsx
+│ │ │ ├── 📄 NotificationSnackbar.jsx
+│ │ │ └── 📄 SchedulerDialog.jsx
+│ │ ├── 📁 context/
+│ │ │ ├── 📄 AuthContext.jsx
+│ │ │ ├── 📄 ConfigContext.jsx
+│ │ │ └── 📄 SchedulerContext.jsx
+│ │ ├── 📁 hooks/
+│ │ │ └── 📄 useFetch.js
+│ │ ├── 📁 pages/
+│ │ │ ├── 📄 ArchiveModeWarning.jsx
+│ │ │ ├── 📄 BackupsPage.jsx
+│ │ │ ├── 📄 Dashboard.jsx
+│ │ │ ├── 📄 LogsPage.jsx
+│ │ │ └── 📄 SettingsPage.jsx
+│ │ ├── 📁 styles/
+│ │ │ └── 🎨 global.css
+│ │ ├── 📁 utils/
+│ │ │ └── 📄 formatDate.js
+│ │ ├── 📄 App.jsx
+│ │ ├── 📄 index.js
+│ │ └── 📄 routes.js
+│ ├── 📖 README.md
+│ └── 📄 vite.config.js
 
 ---
 
