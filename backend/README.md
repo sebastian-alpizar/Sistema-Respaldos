@@ -28,6 +28,8 @@ El proyecto implementa un patrón de **Arquitectura en Capas** que separa claram
 
 ## 📁 Estructura del Directorio
 
+```
+📁 sistema-respaldos/
 ├── 📁 backend/
 │   ├── 📁 __pycache__/ 🚫 (auto-hidden)
 │   ├── 📁 app/
@@ -62,7 +64,7 @@ El proyecto implementa un patrón de **Arquitectura en Capas** que separa claram
 │   ├── 🐍 main.py
 │   └── 📄 requirements.txt
 
----
+```
 
 ## 🚀 Configuración e Instalación (Desarrollo)
 
