@@ -63,15 +63,7 @@ El frontend está organizado por tipo de responsabilidad, lo que permite que el 
 │   │   └── 📄 routes.js
 │   ├── 📖 README.md
 │   └── 📄 vite.config.js
-├── 📁 backend/
-│   ├── 📁 src/
-│   │   ├── 📁 models/
-│   │   ├── 📁 routes/
-│   │   ├── 📁 services/
-│   │   └── 📄 main.py
-│   ├── 📄 requirements.txt
-│   └── 📄 .env
-└── 📖 README.md
+
 ```
 
 ## 🚀 Configuración y Ejecución
