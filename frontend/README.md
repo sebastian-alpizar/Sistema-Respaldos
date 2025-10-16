@@ -76,9 +76,9 @@ Asegúrate de tener instalado **Node.js** y **npm** (o **yarn/pnpm**).
 
 Si el directorio `frontend/` aún no existe o está vacío, puedes inicializarlo con Vite.
 
-1.  Abre una terminal y navega a la **raíz del proyecto** (no dentro de `frontend/` si vas a crearla):
+1.  Abre una terminal y navega a la **frontend**:
     ```bash
-    cd <ruta_raiz_del_proyecto>
+    cd frontend
     ```
 
 2.  Crea la estructura base con Vite:
