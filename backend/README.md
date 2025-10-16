@@ -116,10 +116,64 @@ Si no tienes Rust instalado:
     ```
     *(Alternativamente, puedes instalar las principales manualmente: `pip install fastapi uvicorn[standard] sqlalchemy cx_Oracle apscheduler aiosmtplib python-dotenv`)*
 
-### 3. Ejecución
+## 🔧 Configuración del Entorno Virtual en VS Code
+
+Para evitar advertencias de importación y asegurar un desarrollo fluido, configura el entorno virtual en tu editor.
+
+---
+
+4.  Seleccionar el Intérprete en Python
+
+#### 🔹 Abrir la Paleta de Comandos
+- Presiona `Ctrl + Shift + P` en VS Code  
+- Escribe: `Python: Select Interpreter`
+
+#### 🔹 Seleccionar la Ruta del Intérprete
+- Selecciona: `Enter interpreter path...`  
+- Elige: `Find...`
+
+#### 🔹 Navegar al Entorno Virtual
+- Ve a la carpeta en donde tienes el proyecto:  
+  `C:\Users\sebas\Downloads\Sistema-Respaldos\backend\venv\Scripts`
+- Selecciona el archivo:  
+  `python.exe`
+
+#### 🔹 Verificar la Configuración
+- En la esquina inferior derecha de VS Code, deberías ver algo como:  
+  `Python 3.x.x ('venv': venv)`
+
+---
+
+5.  Configuración de Variables de Entorno
+
+Crea un archivo **`.env`** en la raíz del directorio **`backend/`** con las siguientes variables:
+
+```env
+# Configuración de Base de Datos Oracle
+ORACLE_USER=tu_usuario
+ORACLE_PASSWORD=tu_password
+ORACLE_DSN=localhost:1521/XE
+
+# Configuración SMTP para Notificaciones (No son necesarias por ahora)
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=tu_email@gmail.com
+SMTP_PASSWORD=tu_app_password
+NOTIFICATION_EMAIL=destinatario@empresa.com
+
+# Configuración de la Aplicación
+DEBUG=True
+BACKUP_BASE_PATH=/backup/oracle
+RETENTION_DAYS=30
+```
+
+6. Ejecución
 
 Para iniciar la aplicación con **Uvicorn** en modo desarrollo:
 
 ```bash
 # Asegúrate de estar en el directorio 'backend/'
 uvicorn main:app --reload
+```
+La aplicación estará disponible en:
+👉 http://127.0.0.1:8000
