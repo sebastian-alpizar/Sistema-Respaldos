@@ -76,9 +76,10 @@ Asegúrate de tener instalado **Node.js** y **npm** (o **yarn/pnpm**).
 
 ### 2. Inicialización del Proyecto
 
-En la carpeta raíz del proyecto
 
-Crea la estructura base con Vite:
+En la raiz del proyecto.
+
+1.  En la raiz del proyecto, crea la estructura base con Vite:
     ```bash
     npm create vite@latest
     ```
