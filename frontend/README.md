@@ -79,7 +79,7 @@ Asegúrate de tener instalado **Node.js** y **npm** (o **yarn/pnpm**).
 
 Dentro de la carpeta frontend del proyecto.
 
-Instala todas las dependencias listadas en `package.json`:
+1. Instala todas las dependencias listadas en `package.json`:
     ```bash
     npm install
     ```
