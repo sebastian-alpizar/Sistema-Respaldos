@@ -145,16 +145,42 @@ class BackupScheduler:
             return False
     
     def get_scheduled_jobs(self) -> List[Dict[str, Any]]:
-        """Obtiene información de todos los jobs programados"""
+        """Obtiene información de todos los jobs programados - Versión segura"""
         jobs_info = []
         
-        for job in self.scheduler.get_jobs():
-            jobs_info.append({
-                'id': job.id,
-                'name': job.name,
-                'next_run_time': job.next_run_time,
-                'strategy_id': self._extract_strategy_id(job.id)
-            })
+        try:
+            for job in self.scheduler.get_jobs():
+                job_info = {
+                    'id': job.id,
+                    'name': getattr(job, 'name', 'Unknown'),
+                    'strategy_id': self._extract_strategy_id(job.id),
+                }
+                
+                # Manejo muy conservador de next_run_time
+                try:
+                    next_run = getattr(job, 'next_run_time', None)
+                    if next_run and hasattr(next_run, 'isoformat'):
+                        job_info['next_run_time'] = next_run.isoformat()
+                        job_info['next_run_time_formatted'] = next_run.strftime("%Y-%m-%d %H:%M:%S")
+                    else:
+                        job_info['next_run_time'] = None
+                        job_info['next_run_time_formatted'] = "No programado"
+                except:
+                    job_info['next_run_time'] = None
+                    job_info['next_run_time_formatted'] = "Error"
+                
+                jobs_info.append(job_info)
+                
+        except Exception as e:
+            logger.error(f"Error crítico en get_scheduled_jobs: {str(e)}")
+            # Devolver al menos información básica
+            jobs_info = [{
+                'id': 'error',
+                'name': 'Error obteniendo jobs',
+                'next_run_time': None,
+                'next_run_time_formatted': 'Error',
+                'strategy_id': None
+            }]
         
         return jobs_info
     

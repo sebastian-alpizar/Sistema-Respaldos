@@ -34,7 +34,8 @@ class LogService:
     ) -> List[Log]:
         """Obtiene los logs de una estrategia específica"""
         try:
-            return await self.log_repo.get_by_strategy(strategy_id, limit, offset)
+            logs = await self.log_repo.get_by_strategy(strategy_id, limit, offset)
+            return logs or []
         except Exception as e:
             logger.error(f"Error obteniendo logs de estrategia {strategy_id}: {str(e)}")
             return []
@@ -48,7 +49,8 @@ class LogService:
     ) -> List[Log]:
         """Obtiene logs por rango de fecha"""
         try:
-            return await self.log_repo.get_by_date_range(start_date, end_date, level, status)
+            logs = await self.log_repo.get_by_date_range(start_date, end_date, level, status)
+            return logs or []
         except Exception as e:
             logger.error(f"Error obteniendo logs por rango de fecha: {str(e)}")
             return []

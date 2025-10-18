@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query
+from fastapi import status as http_status
 from typing import List, Optional
 from datetime import datetime, timedelta
 from app.models.log import Log, LogLevel, BackupStatus
@@ -25,9 +26,10 @@ async def get_logs(
         if strategy_id:
             return await log_service.get_strategy_logs(strategy_id, limit, offset)
         else:
-            return await log_service.get_logs_by_date_range(
+            logs = await log_service.get_logs_by_date_range(
                 start_date, end_date, level, status
-            )[:limit]
+            )
+            return logs[:limit]
             
     except Exception as e:
         raise HTTPException(
@@ -41,7 +43,7 @@ async def get_log(log_id: int):
     log = await log_service.get_log(log_id)
     if not log:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Log no encontrado"
         )
     return log
@@ -57,7 +59,7 @@ async def get_strategy_logs(
         return await log_service.get_strategy_logs(strategy_id, limit, offset)
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error obteniendo logs de estrategia: {str(e)}"
         )
 
@@ -69,7 +71,7 @@ async def get_backup_statistics(days: int = Query(30, ge=1, le=365)):
         return stats
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error obteniendo estadísticas: {str(e)}"
         )
 
@@ -115,7 +117,7 @@ async def delete_log(log_id: int):
         success = await log_service.delete_log(log_id)
         if not success:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Log no encontrado"
             )
         
@@ -125,6 +127,6 @@ async def delete_log(log_id: int):
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error eliminando log: {str(e)}"
         )
