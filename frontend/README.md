@@ -77,29 +77,14 @@ Asegúrate de tener instalado **Node.js** y **npm** (o **yarn/pnpm**).
 ### 2. Inicialización del Proyecto
 
 
-En la raiz del proyecto.
+Dentro de la carpeta frontend del proyecto.
 
-1.  En la raiz del proyecto, crea la estructura base con Vite:
-    ```bash
-    npm create vite@latest
-    ```
-    * **Project name:** `frontend`
-    * **Framework:** `React`
-    * **Variant:** `JavaScript`
-
-### 3. Instalación de Dependencias
-
-1.  Navega al nuevo directorio `frontend/`:
-    ```bash
-    cd frontend
-    ```
-
-2.  Instala todas las dependencias listadas en `package.json`:
+Instala todas las dependencias listadas en `package.json`:
     ```bash
     npm install
     ```
 
-### 4. Ejecución
+### 3. Ejecución
 
 Para iniciar el servidor de desarrollo del frontend:
 
