@@ -99,7 +99,6 @@ const LogTable = ({ logs, onViewLog, onDeleteLog, loading = false }) => {
                 <TableCell>Mensaje</TableCell>
                 <TableCell>Inicio</TableCell>
                 <TableCell>Duración</TableCell>
-                <TableCell>Tamaño</TableCell>
                 <TableCell>Acciones</TableCell>
                 </TableRow>
             </TableHead>
@@ -143,11 +142,6 @@ const LogTable = ({ logs, onViewLog, onDeleteLog, loading = false }) => {
                     <TableCell>
                     <Typography variant="body2">
                         {log.duration_seconds ? `${log.duration_seconds}s` : '-'}
-                    </Typography>
-                    </TableCell>
-                    <TableCell>
-                    <Typography variant="body2">
-                        {log.backup_size_mb ? `${log.backup_size_mb.toFixed(2)} MB` : '-'}
                     </Typography>
                     </TableCell>
                     <TableCell>

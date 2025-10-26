@@ -7,13 +7,6 @@ import {
     Grid,
     TextField,
     Button,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Switch,
-    FormControlLabel,
-    Divider,
     Alert,
     Paper,
     List,
@@ -27,7 +20,6 @@ import {
     Science,
     Storage,
     Email,
-    Settings as SettingsIcon,
     CheckCircle,
     Error as ErrorIcon,
 } from '@mui/icons-material';
@@ -42,14 +34,14 @@ const SettingsPage = () => {
         checkArchiveLogMode 
     } = useConfig();
     
+    // ✅ CORREGIDO: Inicializar todos los campos con valores por defecto
     const [settings, setSettings] = useState({
         oracle_user: '',
         oracle_dsn: '',
         smtp_server: '',
         smtp_port: 587,
         smtp_username: '',
-        notification_email: '',
-        backup_base_path: './backups',
+        notification_email: '', // ✅ AGREGAR ESTE CAMPO QUE FALTABA
         retention_days: 30,
     });
     
@@ -64,7 +56,11 @@ const SettingsPage = () => {
     const loadCurrentConfig = async () => {
         try {
             const response = await systemService.getConfiguration();
-            setSettings(response.data);
+            // ✅ CORREGIDO: Asegurar que todos los campos tengan valores
+            setSettings(prev => ({
+                ...prev,
+                ...response.data
+            }));
         } catch (error) {
             console.error('Error cargando configuración:', error);
         }
@@ -172,7 +168,7 @@ const SettingsPage = () => {
                     <TextField
                         fullWidth
                         label="Usuario Oracle"
-                        value={settings.oracle_user}
+                        value={settings.oracle_user || ''} // ✅ Asegurar valor definido
                         onChange={handleSettingChange('oracle_user')}
                         placeholder="system"
                     />
@@ -181,7 +177,7 @@ const SettingsPage = () => {
                     <TextField
                         fullWidth
                         label="DSN Oracle"
-                        value={settings.oracle_dsn}
+                        value={settings.oracle_dsn || ''} // ✅ Asegurar valor definido
                         onChange={handleSettingChange('oracle_dsn')}
                         placeholder="localhost:1521/XE"
                         helperText="Formato: host:puerto/service_name"
@@ -213,14 +209,17 @@ const SettingsPage = () => {
                             <CheckCircle color="success" /> : <ErrorIcon color="error" />
                             }
                         </ListItemIcon>
+                        {/* ✅ CORREGIDO: Usar primary en lugar de secondary para el Chip */}
                         <ListItemText
-                            primary="Conexión Oracle"
-                            secondary={
-                            <Chip
-                                label={systemHealth.oracle_connection}
-                                color={systemHealth.oracle_connection === 'connected' ? 'success' : 'error'}
-                                size="small"
-                            />
+                            primary={
+                                <Box display="flex" alignItems="center" gap={1}>
+                                    <Typography variant="body2">Conexión Oracle:</Typography>
+                                    <Chip
+                                        label={systemHealth.oracle_connection}
+                                        color={systemHealth.oracle_connection === 'connected' ? 'success' : 'error'}
+                                        size="small"
+                                    />
+                                </Box>
                             }
                         />
                         </ListItem>
@@ -255,7 +254,7 @@ const SettingsPage = () => {
                     <TextField
                         fullWidth
                         label="Servidor SMTP"
-                        value={settings.smtp_server}
+                        value={settings.smtp_server || ''} // ✅ Asegurar valor definido
                         onChange={handleSettingChange('smtp_server')}
                         placeholder="smtp.gmail.com"
                     />
@@ -265,7 +264,7 @@ const SettingsPage = () => {
                         fullWidth
                         label="Puerto SMTP"
                         type="number"
-                        value={settings.smtp_port}
+                        value={settings.smtp_port || 587} // ✅ Asegurar valor definido
                         onChange={handleSettingChange('smtp_port')}
                     />
                     </Grid>
@@ -273,7 +272,7 @@ const SettingsPage = () => {
                     <TextField
                         fullWidth
                         label="Usuario SMTP"
-                        value={settings.smtp_username}
+                        value={settings.smtp_username || ''} // ✅ Asegurar valor definido
                         onChange={handleSettingChange('smtp_username')}
                         placeholder="tu.email@gmail.com"
                     />
@@ -282,7 +281,7 @@ const SettingsPage = () => {
                     <TextField
                         fullWidth
                         label="Email de Notificación"
-                        value={settings.notification_email}
+                        value={settings.notification_email || ''} // ✅ Asegurar valor definido
                         onChange={handleSettingChange('notification_email')}
                         placeholder="admin@company.com"
                     />
@@ -312,43 +311,6 @@ const SettingsPage = () => {
             </Card>
             </Grid>
 
-            {/* Configuración de Backup */}
-            <Grid item xs={12} md={6}>
-            <Card>
-                <CardContent>
-                <Box display="flex" alignItems="center" gap={1} mb={3}>
-                    <SettingsIcon color="primary" />
-                    <Typography variant="h6">
-                    Configuración de Backup
-                    </Typography>
-                </Box>
-
-                <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                    <TextField
-                        fullWidth
-                        label="Ruta Base de Backups"
-                        value={settings.backup_base_path}
-                        onChange={handleSettingChange('backup_base_path')}
-                        helperText="Ruta donde se almacenarán los archivos de backup"
-                    />
-                    </Grid>
-                    <Grid item xs={12}>
-                    <TextField
-                        fullWidth
-                        label="Días de Retención"
-                        type="number"
-                        value={settings.retention_days}
-                        onChange={handleSettingChange('retention_days')}
-                        InputProps={{ inputProps: { min: 1, max: 365 } }}
-                        helperText="Número de días que se conservarán los backups"
-                    />
-                    </Grid>
-                </Grid>
-                </CardContent>
-            </Card>
-            </Grid>
-
             {/* Información del Sistema */}
             <Grid item xs={12} md={6}>
             <Card>
@@ -366,39 +328,48 @@ const SettingsPage = () => {
                         />
                     </ListItem>
                     <ListItem>
+                        {/* ✅ CORREGIDO: Usar primary en lugar de secondary para el Chip */}
                         <ListItemText
-                        primary="Estado del Programador"
-                        secondary={
-                            <Chip
-                            label={systemHealth.scheduler}
-                            color={systemHealth.scheduler === 'running' ? 'success' : 'warning'}
-                            size="small"
-                            />
-                        }
+                            primary={
+                                <Box display="flex" alignItems="center" gap={1}>
+                                    <Typography variant="body2">Estado del Programador:</Typography>
+                                    <Chip
+                                        label={systemHealth.scheduler}
+                                        color={systemHealth.scheduler === 'running' ? 'success' : 'warning'}
+                                        size="small"
+                                    />
+                                </Box>
+                            }
                         />
                     </ListItem>
                     <ListItem>
+                        {/* ✅ CORREGIDO: Usar primary en lugar de secondary para el Chip */}
                         <ListItemText
-                        primary="Configuración de Email"
-                        secondary={
-                            <Chip
-                            label={systemHealth.email}
-                            color={systemHealth.email === 'configured' ? 'success' : 'default'}
-                            size="small"
-                            />
-                        }
+                            primary={
+                                <Box display="flex" alignItems="center" gap={1}>
+                                    <Typography variant="body2">Configuración de Email:</Typography>
+                                    <Chip
+                                        label={systemHealth.email}
+                                        color={systemHealth.email === 'configured' ? 'success' : 'default'}
+                                        size="small"
+                                    />
+                                </Box>
+                            }
                         />
                     </ListItem>
                     <ListItem>
+                        {/* ✅ CORREGIDO: Usar primary en lugar de secondary para el Chip */}
                         <ListItemText
-                        primary="Estado General"
-                        secondary={
-                            <Chip
-                            label={systemHealth.status}
-                            color={systemHealth.status === 'healthy' ? 'success' : 'error'}
-                            size="small"
-                            />
-                        }
+                            primary={
+                                <Box display="flex" alignItems="center" gap={1}>
+                                    <Typography variant="body2">Estado General:</Typography>
+                                    <Chip
+                                        label={systemHealth.status}
+                                        color={systemHealth.status === 'healthy' ? 'success' : 'error'}
+                                        size="small"
+                                    />
+                                </Box>
+                            }
                         />
                     </ListItem>
                     </List>

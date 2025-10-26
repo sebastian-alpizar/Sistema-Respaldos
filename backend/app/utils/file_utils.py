@@ -13,24 +13,29 @@ class FileUtils:
         """Asegura que el directorio exista, creándolo si es necesario"""
         try:
             os.makedirs(path, exist_ok=True)
+            # Verificar permisos de escritura
+            test_file = os.path.join(path, 'test_write.tmp')
+            with open(test_file, 'w') as f:
+                f.write('test')
+            os.remove(test_file)
             return True
         except Exception as e:
-            logger.error(f"Error creando directorio {path}: {str(e)}")
+            logger.error(f"Error creando/verificando directorio {path}: {str(e)}")
             return False
     
     @staticmethod
     def generate_backup_filename(strategy_name: str, backup_type: str) -> str:
         """Genera un nombre de archivo único para el backup"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        safe_name = strategy_name.replace(" ", "_").lower()
-        return f"{safe_name}_{backup_type}_{timestamp}.bkp"
+        safe_name = strategy_name.replace(" ", "_").replace("/", "_").lower()
+        return f"{safe_name}_{backup_type}_{timestamp}"
     
     @staticmethod
-    def get_backup_path(strategy_id: int, filename: str) -> str:
+    def get_backup_path(strategy_id: int, filename: str = '') -> str:
         """Obtiene la ruta completa para un archivo de backup"""
         strategy_path = os.path.join(settings.BACKUP_BASE_PATH, f"strategy_{strategy_id}")
         FileUtils.ensure_directory(strategy_path)
-        return os.path.join(strategy_path, filename)
+        return os.path.join(strategy_path, filename) if filename else strategy_path
     
     @staticmethod
     def calculate_file_size(file_path: str) -> Optional[float]:
@@ -60,11 +65,33 @@ class FileUtils:
                 if os.path.isfile(file_path):
                     file_time = os.path.getctime(file_path)
                     if file_time < cutoff_time:
-                        os.remove(file_path)
-                        deleted_count += 1
-                        logger.info(f"Backup antiguo eliminado: {filename}")
+                        try:
+                            os.remove(file_path)
+                            deleted_count += 1
+                            logger.info(f"Backup antiguo eliminado: {filename}")
+                        except Exception as e:
+                            logger.error(f"Error eliminando {filename}: {str(e)}")
             
             return deleted_count
         except Exception as e:
             logger.error(f"Error limpiando backups antiguos: {str(e)}")
             return 0
+    
+    @staticmethod
+    def get_backup_directory_size(strategy_id: int) -> float:
+        """Calcula el tamaño total del directorio de backup en MB"""
+        try:
+            strategy_path = os.path.join(settings.BACKUP_BASE_PATH, f"strategy_{strategy_id}")
+            if not os.path.exists(strategy_path):
+                return 0.0
+            
+            total_size = 0
+            for dirpath, dirnames, filenames in os.walk(strategy_path):
+                for filename in filenames:
+                    file_path = os.path.join(dirpath, filename)
+                    total_size += os.path.getsize(file_path)
+            
+            return total_size / (1024 * 1024)  # Convertir a MB
+        except Exception as e:
+            logger.error(f"Error calculando tamaño del directorio: {str(e)}")
+            return 0.0

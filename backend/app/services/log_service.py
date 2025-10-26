@@ -1,30 +1,23 @@
+import os
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 import logging
 from app.models.log import Log, LogCreate, LogUpdate, LogLevel, BackupStatus
 from app.repositories.log_repo import LogRepository
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
 class LogService:
-    def __init__(self):
-        self.log_repo = LogRepository()
+    def __init__(self, db: AsyncSession):
+        self.log_repo = LogRepository(db)
     
+    # Los métodos permanecen iguales, pero ahora usan Oracle real
     async def create_log(self, log_data: LogCreate) -> Log:
-        """Crea un nuevo registro de log"""
-        try:
-            return await self.log_repo.create(log_data)
-        except Exception as e:
-            logger.error(f"Error creando log: {str(e)}")
-            raise
+        return await self.log_repo.create(log_data)
     
     async def get_log(self, log_id: int) -> Optional[Log]:
-        """Obtiene un log por ID"""
-        try:
-            return await self.log_repo.get_by_id(log_id)
-        except Exception as e:
-            logger.error(f"Error obteniendo log {log_id}: {str(e)}")
-            return None
+        return await self.log_repo.get_by_id(log_id)
     
     async def get_strategy_logs(
         self, 
@@ -34,8 +27,7 @@ class LogService:
     ) -> List[Log]:
         """Obtiene los logs de una estrategia específica"""
         try:
-            logs = await self.log_repo.get_by_strategy(strategy_id, limit, offset)
-            return logs or []
+            return await self.log_repo.get_by_strategy(strategy_id, limit, offset)
         except Exception as e:
             logger.error(f"Error obteniendo logs de estrategia {strategy_id}: {str(e)}")
             return []
@@ -49,8 +41,7 @@ class LogService:
     ) -> List[Log]:
         """Obtiene logs por rango de fecha"""
         try:
-            logs = await self.log_repo.get_by_date_range(start_date, end_date, level, status)
-            return logs or []
+            return await self.log_repo.get_by_date_range(start_date, end_date, level, status)
         except Exception as e:
             logger.error(f"Error obteniendo logs por rango de fecha: {str(e)}")
             return []
@@ -58,7 +49,13 @@ class LogService:
     async def update_log(self, log_id: int, update_data: LogUpdate) -> Optional[Log]:
         """Actualiza un registro de log"""
         try:
-            return await self.log_repo.update(log_id, update_data)
+            # Convertir a dict para Pydantic v2
+            if isinstance(update_data, dict):
+                update_dict = update_data
+            else:
+                update_dict = update_data.model_dump(exclude_unset=True)
+            
+            return await self.log_repo.update(log_id, update_dict)
         except Exception as e:
             logger.error(f"Error actualizando log {log_id}: {str(e)}")
             return None

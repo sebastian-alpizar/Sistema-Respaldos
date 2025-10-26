@@ -27,6 +27,7 @@ class LogBase(BaseModel):
     duration_seconds: Optional[float] = None
     backup_size_mb: Optional[float] = None
     rman_output: Optional[str] = None
+    rman_log_content: Optional[str] = None  # Contenido completo del archivo .log
     error_message: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
@@ -36,10 +37,12 @@ class LogCreate(LogBase):
 
 class LogUpdate(BaseModel):
     status: Optional[BackupStatus] = None
+    level: Optional[LogLevel] = None  # Agregar este campo
     end_time: Optional[datetime] = None
     duration_seconds: Optional[float] = None
     backup_size_mb: Optional[float] = None
     rman_output: Optional[str] = None
+    rman_log_content: Optional[str] = None  # Añadir este campo
     error_message: Optional[str] = None
 
 class Log(LogBase):

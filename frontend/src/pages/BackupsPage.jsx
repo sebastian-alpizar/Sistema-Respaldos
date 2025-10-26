@@ -25,6 +25,7 @@ const BackupsPage = () => {
         deleteStrategy,
         executeStrategy,
         toggleStrategy,
+        schedulerStatus,
         error 
     } = useScheduler();
     
@@ -171,6 +172,7 @@ const BackupsPage = () => {
 
         <BackupList
             strategies={tabContent[activeTab].strategies}
+            scheduledJobs={schedulerStatus.scheduled_jobs || []}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onExecute={handleExecute}

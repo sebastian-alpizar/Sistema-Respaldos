@@ -1,3 +1,4 @@
+// context/ConfigContext.js - CORREGIDO
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { systemService } from '../api/systemService';
 
@@ -15,7 +16,6 @@ export const ConfigProvider = ({ children }) => {
     const [systemHealth, setSystemHealth] = useState(null);
     const [databaseInfo, setDatabaseInfo] = useState(null);
     const [archiveLogMode, setArchiveLogMode] = useState(null);
-    const [schedulerStatus, setSchedulerStatus] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -53,47 +53,14 @@ export const ConfigProvider = ({ children }) => {
             return response.data;
         } catch (err) {
             setError(err.response?.data?.detail || err.message);
-        return null;
-        }
-    };
-
-    const refreshSchedulerStatus = async () => {
-        try {
-            const response = await systemService.getSchedulerStatus();
-            setSchedulerStatus(response.data);
-        } catch (err) {
-            setError(err.response?.data?.detail || err.message);
-        }
-    };
-
-    const startScheduler = async () => {
-        try {
-            await systemService.startScheduler();
-            await refreshSchedulerStatus();
-            await refreshSystemHealth();
-        } catch (err) {
-            setError(err.response?.data?.detail || err.message);
-            throw err;
-        }
-    };
-
-    const stopScheduler = async () => {
-        try {
-            await systemService.stopScheduler();
-            await refreshSchedulerStatus();
-            await refreshSystemHealth();
-        } catch (err) {
-            setError(err.response?.data?.detail || err.message);
-            throw err;
+            return null;
         }
     };
 
     useEffect(() => {
         refreshSystemHealth();
         refreshDatabaseInfo();
-        refreshSchedulerStatus();
         
-        // Actualizar cada 30 segundos
         const interval = setInterval(() => {
             refreshSystemHealth();
         }, 30000);
@@ -105,15 +72,11 @@ export const ConfigProvider = ({ children }) => {
         systemHealth,
         databaseInfo,
         archiveLogMode,
-        schedulerStatus,
         loading,
         error,
         refreshSystemHealth,
         refreshDatabaseInfo,
         checkArchiveLogMode,
-        refreshSchedulerStatus,
-        startScheduler,
-        stopScheduler,
     };
 
     return (

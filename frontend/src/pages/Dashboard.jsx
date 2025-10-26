@@ -25,14 +25,16 @@ import { logService } from '../api/logService';
 const Dashboard = () => {
     const { 
         systemHealth, 
-        databaseInfo, 
-        schedulerStatus,
-        startScheduler, 
-        stopScheduler,
+        databaseInfo,
         refreshSystemHealth 
     } = useConfig();
-    
-    const { strategies, scheduledJobs } = useScheduler();
+
+    const { 
+        strategies, 
+        schedulerStatus,
+        startScheduler, 
+        stopScheduler 
+    } = useScheduler();
     
     const [statistics, setStatistics] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -83,7 +85,7 @@ const Dashboard = () => {
                 La conexión a Oracle no está disponible
                 </Alert>
             )}
-            {systemHealth.scheduler === 'stopped' && (
+            {!schedulerStatus.running && (
                 <Alert severity="warning" sx={{ mb: 1 }}>
                 El programador de backups está detenido
                 </Alert>
@@ -171,13 +173,13 @@ const Dashboard = () => {
             <Card>
                 <CardContent>
                 <Box display="flex" alignItems="center" gap={2}>
-                    <Warning color={scheduledJobs.length > 0 ? "success" : "disabled"} />
+                    <Warning color={schedulerStatus.scheduled_jobs_count > 0 ? "success" : "disabled"} />
                     <Box>
                     <Typography color="textSecondary" gutterBottom>
                         Jobs Activos
                     </Typography>
                     <Typography variant="h5" component="div">
-                        {scheduledJobs.length}
+                        {schedulerStatus.scheduled_jobs_count}
                     </Typography>
                     </Box>
                 </Box>
@@ -197,12 +199,13 @@ const Dashboard = () => {
                 <Typography variant="h6" gutterBottom>
                     Control del Programador
                 </Typography>
-                <Typography variant="body2" color="textSecondary">
-                    {schedulerStatus?.running 
-                    ? 'El programador está ejecutándose y procesando jobs programados'
-                    : 'El programador está detenido - No se ejecutarán backups automáticos'
-                    }
-                </Typography>
+
+                {schedulerStatus?.running && (
+                    <Typography variant="body2" color="textSecondary">
+                        El programador está ejecutándose jobs automaticamente
+                    </Typography>
+                )}
+
                 </Box>
                 <Box display="flex" gap={1}>
                 {schedulerStatus?.running ? (

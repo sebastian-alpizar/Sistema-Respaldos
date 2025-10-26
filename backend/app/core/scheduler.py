@@ -1,3 +1,4 @@
+# app/core/scheduler.py - VERSIÓN COMPLETAMENTE CORREGIDA
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
@@ -6,26 +7,57 @@ from typing import List, Dict, Any, Optional
 import logging
 from app.models.strategy import Strategy, ScheduleFrequency
 from app.services.backup_service import BackupService
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.database import AsyncSessionLocal
 
 logger = logging.getLogger(__name__)
 
 class BackupScheduler:
     def __init__(self):
         self.scheduler = AsyncIOScheduler()
-        self.backup_service = BackupService()
-        self.scheduled_jobs: Dict[int, str] = {}  # strategy_id -> job_id
+        self.scheduled_jobs = {} 
+
+    async def initialize(self, db: AsyncSession):
+        """Inicializa el scheduler cargando las estrategias activas de la BD"""
+        try:
+            from app.repositories.strategy_repo import StrategyRepository
+            
+            strategy_repo = StrategyRepository(db)
+            active_strategies = await strategy_repo.get_active_strategies()
+            
+            logger.info(f"🔄 Cargando {len(active_strategies)} estrategias activas...")
+            
+            strategies_loaded = 0
+            for strategy in active_strategies:
+                success = self.schedule_strategy(strategy)
+                if success:
+                    strategies_loaded += 1
+                    logger.info(f"✅ Estrategia cargada: {strategy.name} (ID: {strategy.id})")
+                else:
+                    logger.error(f"❌ Error cargando estrategia: {strategy.name} (ID: {strategy.id})")
+            
+            logger.info(f"📊 Resumen: {strategies_loaded}/{len(active_strategies)} estrategias cargadas exitosamente")
+            
+            # Iniciar el scheduler después de cargar las estrategias
+            if not self.scheduler.running:
+                self.scheduler.start()
+                logger.info("✅ Scheduler iniciado con estrategias cargadas")
+                
+        except Exception as e:
+            logger.error(f"❌ Error inicializando scheduler: {str(e)}")
+            raise
     
     def start(self):
         """Inicia el programador"""
         if not self.scheduler.running:
             self.scheduler.start()
-            logger.info("Programador de backups iniciado")
+            logger.info("✅ Programador de backups iniciado")
     
     def shutdown(self):
         """Detiene el programador"""
         if self.scheduler.running:
             self.scheduler.shutdown()
-            logger.info("Programador de backups detenido")
+            logger.info("🛑 Programador de backups detenido")
     
     def schedule_strategy(self, strategy: Strategy) -> bool:
         """Programa una estrategia de backup"""
@@ -37,7 +69,7 @@ class BackupScheduler:
             # Crear trigger según la frecuencia
             trigger = self._create_trigger(strategy)
             if not trigger:
-                logger.error(f"No se pudo crear trigger para estrategia {strategy.id}")
+                logger.error(f"❌ No se pudo crear trigger para estrategia {strategy.id}")
                 return False
             
             # Crear job
@@ -52,13 +84,13 @@ class BackupScheduler:
             )
             
             self.scheduled_jobs[strategy.id] = job_id
-            logger.info(f"Estrategia programada: {strategy.name} (ID: {strategy.id})")
-            logger.info(f"Próxima ejecución: {job.next_run_time}")
+            logger.info(f"✅ Estrategia programada: {strategy.name} (ID: {strategy.id})")
+            logger.info(f"⏰ Próxima ejecución: {job.next_run_time}")
             
             return True
             
         except Exception as e:
-            logger.error(f"Error programando estrategia {strategy.id}: {str(e)}")
+            logger.error(f"❌ Error programando estrategia {strategy.id}: {str(e)}")
             return False
     
     def _create_trigger(self, strategy: Strategy):
@@ -74,7 +106,7 @@ class BackupScheduler:
         
         elif strategy.schedule_frequency == ScheduleFrequency.WEEKLY:
             if not strategy.schedule_days:
-                logger.error("Estrategia semanal requiere días de la semana")
+                logger.error("❌ Estrategia semanal requiere días de la semana")
                 return None
             
             return CronTrigger(
@@ -86,7 +118,7 @@ class BackupScheduler:
         
         elif strategy.schedule_frequency == ScheduleFrequency.MONTHLY:
             if not strategy.schedule_days:
-                logger.error("Estrategia mensual requiere días del mes")
+                logger.error("❌ Estrategia mensual requiere días del mes")
                 return None
             
             return CronTrigger(
@@ -97,9 +129,7 @@ class BackupScheduler:
             )
         
         elif strategy.schedule_frequency == ScheduleFrequency.CUSTOM:
-            # Para frecuencia personalizada, usar cron expression personalizada
-            # Esto requeriría un campo adicional en el modelo para la expresión cron
-            logger.warning("Frecuencia personalizada no implementada completamente")
+            logger.warning("⚠️ Frecuencia personalizada no implementada completamente")
             return None
         
         return None
@@ -111,20 +141,23 @@ class BackupScheduler:
                 job_id = self.scheduled_jobs[strategy_id]
                 self.scheduler.remove_job(job_id)
                 del self.scheduled_jobs[strategy_id]
-                logger.info(f"Programación eliminada para estrategia {strategy_id}")
+                logger.info(f"🗑️ Programación eliminada para estrategia {strategy_id}")
                 return True
             return False
         except Exception as e:
-            logger.error(f"Error eliminando programación de estrategia {strategy_id}: {str(e)}")
+            logger.error(f"❌ Error eliminando programación de estrategia {strategy_id}: {str(e)}")
             return False
     
     async def _execute_backup_wrapper(self, strategy: Strategy):
         """Wrapper para ejecutar el backup desde el scheduler"""
         try:
-            logger.info(f"Ejecutando backup programado: {strategy.name}")
-            await self.backup_service.execute_backup_strategy(strategy)
+            # Crear una nueva sesión de BD para el job del scheduler
+            async with AsyncSessionLocal() as db:
+                backup_service = BackupService(db)
+                logger.info(f"🏃 Ejecutando backup programado: {strategy.name}")
+                await backup_service.execute_backup_strategy(strategy)
         except Exception as e:
-            logger.error(f"Error en ejecución programada de {strategy.name}: {str(e)}")
+            logger.error(f"❌ Error en ejecución programada de {strategy.name}: {str(e)}")
     
     def schedule_immediate_backup(self, strategy: Strategy) -> bool:
         """Programa un backup para ejecución inmediata"""
@@ -137,15 +170,15 @@ class BackupScheduler:
                 id=job_id
             )
             
-            logger.info(f"Backup inmediato programado: {strategy.name}")
+            logger.info(f"⚡ Backup inmediato programado: {strategy.name}")
             return True
             
         except Exception as e:
-            logger.error(f"Error programando backup inmediato: {str(e)}")
+            logger.error(f"❌ Error programando backup inmediato: {str(e)}")
             return False
     
     def get_scheduled_jobs(self) -> List[Dict[str, Any]]:
-        """Obtiene información de todos los jobs programados - Versión segura"""
+        """Obtiene información de todos los jobs programados"""
         jobs_info = []
         
         try:
@@ -156,7 +189,7 @@ class BackupScheduler:
                     'strategy_id': self._extract_strategy_id(job.id),
                 }
                 
-                # Manejo muy conservador de next_run_time
+                # Manejo seguro de next_run_time
                 try:
                     next_run = getattr(job, 'next_run_time', None)
                     if next_run and hasattr(next_run, 'isoformat'):
@@ -172,8 +205,7 @@ class BackupScheduler:
                 jobs_info.append(job_info)
                 
         except Exception as e:
-            logger.error(f"Error crítico en get_scheduled_jobs: {str(e)}")
-            # Devolver al menos información básica
+            logger.error(f"❌ Error crítico en get_scheduled_jobs: {str(e)}")
             jobs_info = [{
                 'id': 'error',
                 'name': 'Error obteniendo jobs',
@@ -195,7 +227,7 @@ class BackupScheduler:
     
     def reschedule_all_strategies(self, strategies: List[Strategy]):
         """Reprograma todas las estrategias (útil al iniciar la aplicación)"""
-        logger.info("Reprogramando todas las estrategias...")
+        logger.info("🔄 Reprogramando todas las estrategias...")
         
         # Limpiar jobs existentes
         for strategy_id in list(self.scheduled_jobs.keys()):
@@ -206,4 +238,7 @@ class BackupScheduler:
         for strategy in active_strategies:
             self.schedule_strategy(strategy)
         
-        logger.info(f"Reprogramadas {len(active_strategies)} estrategias activas")
+        logger.info(f"✅ {len(active_strategies)} estrategias activas reprogramadas")
+
+# Crear instancia global del scheduler
+backup_scheduler = BackupScheduler()

@@ -18,6 +18,8 @@ import {
     Alert,
     Card,
     CardContent,
+    Tab,
+    Tabs
 } from '@mui/material';
 import {
     Download,
@@ -46,11 +48,73 @@ const LogsPage = () => {
     const [selectedLog, setSelectedLog] = useState(null);
     const [detailDialogOpen, setDetailDialogOpen] = useState(false);
     const [statistics, setStatistics] = useState(null);
+    const [activeTab, setActiveTab] = useState(0);
 
     useEffect(() => {
         loadLogs();
         loadStatistics();
     }, []);
+
+    // Función para formatear el log de RMAN
+    const formatRmanLog = (logContent) => {
+        if (!logContent) return 'No hay contenido de log disponible';
+        
+        // Dividir en líneas y limpiar
+        const lines = logContent.split('\n').filter(line => line.trim());
+        
+        return lines.map((line, index) => {
+            // Detectar tipos de línea para colorear
+            let color = 'text.primary';
+            let bgcolor = 'transparent';
+            let fontWeight = 'normal';
+            let padding = '2px 0';
+            
+            // Líneas de error
+            if (line.includes('RMAN-') || line.includes('Error') || line.includes('error')) {
+                color = 'error.main';
+                fontWeight = 'bold';
+            }
+            // Líneas de éxito
+            else if (line.includes('finalizado') || line.includes('completado') || line.includes('exitoso')) {
+                color = 'success.main';
+            }
+            // Líneas de advertencia
+            else if (line.includes('Advertencia') || line.includes('Warning')) {
+                color = 'warning.main';
+            }
+            // Líneas de comando
+            else if (line.startsWith('RMAN>') || line.includes('CONFIGURE') || line.includes('BACKUP')) {
+                color = 'primary.main';
+                fontWeight = 'medium';
+            }
+            // Encabezados/secciones
+            else if (line.includes('====') || line.includes('----') || line.includes('Empezando backup')) {
+                color = 'text.secondary';
+                fontWeight = 'bold';
+                bgcolor = 'action.hover';
+                padding = '4px 8px';
+            }
+            
+            return (
+                <Box
+                    key={index}
+                    sx={{
+                        color,
+                        fontWeight,
+                        backgroundColor: bgcolor,
+                        padding,
+                        fontFamily: 'monospace',
+                        fontSize: '0.75rem',
+                        lineHeight: '1.2',
+                        borderBottom: bgcolor !== 'transparent' ? '1px solid' : 'none',
+                        borderColor: 'divider'
+                    }}
+                >
+                    {line}
+                </Box>
+            );
+        });
+    };
 
     const loadLogs = async () => {
         try {
@@ -416,119 +480,306 @@ const LogsPage = () => {
         />
 
         {/* Diálogo de detalles del log */}
+        
         <Dialog
             open={detailDialogOpen}
-            onClose={() => setDetailDialogOpen(false)}
-            maxWidth="md"
+            onClose={() => {
+                setDetailDialogOpen(false);
+                setActiveTab(0); // Resetear pestaña al cerrar
+            }}
+            maxWidth="lg"
             fullWidth
+            sx={{
+                '& .MuiDialog-paper': {
+                    height: '80vh'
+                }
+            }}
         >
             <DialogTitle>
-            Detalles del Log - ID: {selectedLog?.id}
+                Detalles del Log - ID: {selectedLog?.id}
+                <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                    Estrategia #{selectedLog?.strategy_id} - {selectedLog?.message}
+                </Typography>
             </DialogTitle>
-            <DialogContent>
-            {selectedLog && (
-                <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle2" color="textSecondary">
-                    Estrategia
-                    </Typography>
-                    <Typography variant="body1">
-                    #{selectedLog.strategy_id}
-                    </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle2" color="textSecondary">
-                    Estado
-                    </Typography>
-                    <Chip
-                    label={selectedLog.status}
-                    color={
-                        selectedLog.status === 'completed' ? 'success' :
-                        selectedLog.status === 'failed' ? 'error' :
-                        selectedLog.status === 'running' ? 'info' : 'default'
-                    }
-                    size="small"
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle2" color="textSecondary">
-                    Nivel
-                    </Typography>
-                    <Chip
-                    label={selectedLog.level}
-                    color={
-                        selectedLog.level === 'error' ? 'error' :
-                        selectedLog.level === 'warning' ? 'warning' :
-                        selectedLog.level === 'critical' ? 'error' : 'info'
-                    }
-                    size="small"
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle2" color="textSecondary">
-                    Tamaño
-                    </Typography>
-                    <Typography variant="body1">
-                    {selectedLog.backup_size_mb ? `${selectedLog.backup_size_mb.toFixed(2)} MB` : 'N/A'}
-                    </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle2" color="textSecondary">
-                    Inicio
-                    </Typography>
-                    <Typography variant="body1">
-                    {formatDate.full(selectedLog.start_time)}
-                    </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle2" color="textSecondary">
-                    Duración
-                    </Typography>
-                    <Typography variant="body1">
-                    {selectedLog.duration_seconds ? `${selectedLog.duration_seconds}s` : 'N/A'}
-                    </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                    <Typography variant="subtitle2" color="textSecondary">
-                    Mensaje
-                    </Typography>
-                    <Typography variant="body1" sx={{ mt: 1 }}>
-                    {selectedLog.message}
-                    </Typography>
-                </Grid>
-                {selectedLog.error_message && (
-                    <Grid item xs={12}>
-                    <Alert severity="error" sx={{ mt: 1 }}>
-                        <Typography variant="subtitle2" gutterBottom>
-                        Error:
-                        </Typography>
-                        <Typography variant="body2">
-                        {selectedLog.error_message}
-                        </Typography>
-                    </Alert>
-                    </Grid>
-                )}
-                {selectedLog.details && Object.keys(selectedLog.details).length > 0 && (
-                    <Grid item xs={12}>
-                    <Typography variant="subtitle2" color="textSecondary">
-                        Detalles Adicionales
-                    </Typography>
-                    <Paper variant="outlined" sx={{ p: 2, mt: 1 }}>
-                        <pre style={{ margin: 0, fontSize: '0.875rem' }}>
-                        {JSON.stringify(selectedLog.details, null, 2)}
-                        </pre>
-                    </Paper>
-                    </Grid>
-                )}
-                </Grid>
-            )}
+            
+            <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column' }}>
+                <Tabs 
+                    value={activeTab} 
+                    onChange={(e, newValue) => setActiveTab(newValue)}
+                    sx={{ 
+                        borderBottom: 1, 
+                        borderColor: 'divider',
+                        px: 2,
+                        pt: 1
+                    }}
+                >
+                    <Tab label="Información General" />
+                    <Tab label="Log RMAN Completo" />
+                    <Tab label="Resumen" />
+                </Tabs>
+
+                <Box sx={{ flex: 1, overflow: 'auto' }}>
+                    {selectedLog && (
+                        <>
+                            {/* Pestaña 1: Información General */}
+                            {activeTab === 0 && (
+                                <Box sx={{ p: 3 }}>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12} sm={6}>
+                                            <Typography variant="subtitle2" color="textSecondary">
+                                                Estrategia
+                                            </Typography>
+                                            <Typography variant="body1">
+                                                #{selectedLog.strategy_id}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <Typography variant="subtitle2" color="textSecondary">
+                                                Estado
+                                            </Typography>
+                                            <Chip
+                                                label={selectedLog.status}
+                                                color={
+                                                    selectedLog.status === 'completed' ? 'success' :
+                                                    selectedLog.status === 'failed' ? 'error' :
+                                                    selectedLog.status === 'running' ? 'info' : 'default'
+                                                }
+                                                size="small"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <Typography variant="subtitle2" color="textSecondary">
+                                                Nivel
+                                            </Typography>
+                                            <Chip
+                                                label={selectedLog.level}
+                                                color={
+                                                    selectedLog.level === 'error' ? 'error' :
+                                                    selectedLog.level === 'warning' ? 'warning' :
+                                                    selectedLog.level === 'critical' ? 'error' : 'info'
+                                                }
+                                                size="small"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <Typography variant="subtitle2" color="textSecondary">
+                                                Tamaño
+                                            </Typography>
+                                            <Typography variant="body1">
+                                                {selectedLog.backup_size_mb ? `${selectedLog.backup_size_mb.toFixed(2)} MB` : 'N/A'}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <Typography variant="subtitle2" color="textSecondary">
+                                                Inicio
+                                            </Typography>
+                                            <Typography variant="body1">
+                                                {formatDate.full(selectedLog.start_time)}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <Typography variant="subtitle2" color="textSecondary">
+                                                Duración
+                                            </Typography>
+                                            <Typography variant="body1">
+                                                {selectedLog.duration_seconds ? `${selectedLog.duration_seconds}s` : 'N/A'}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Typography variant="subtitle2" color="textSecondary">
+                                                Mensaje
+                                            </Typography>
+                                            <Typography variant="body1" sx={{ mt: 1 }}>
+                                                {selectedLog.message}
+                                            </Typography>
+                                        </Grid>
+                                        {selectedLog.error_message && (
+                                            <Grid item xs={12}>
+                                                <Alert severity="error" sx={{ mt: 1 }}>
+                                                    <Typography variant="subtitle2" gutterBottom>
+                                                        Error:
+                                                    </Typography>
+                                                    <Typography variant="body2">
+                                                        {selectedLog.error_message}
+                                                    </Typography>
+                                                </Alert>
+                                            </Grid>
+                                        )}
+                                        {selectedLog.details && Object.keys(selectedLog.details).length > 0 && (
+                                            <Grid item xs={12}>
+                                                <Typography variant="subtitle2" color="textSecondary">
+                                                    Detalles Adicionales
+                                                </Typography>
+                                                <Paper variant="outlined" sx={{ p: 2, mt: 1 }}>
+                                                    <pre style={{ margin: 0, fontSize: '0.875rem' }}>
+                                                        {JSON.stringify(selectedLog.details, null, 2)}
+                                                    </pre>
+                                                </Paper>
+                                            </Grid>
+                                        )}
+                                    </Grid>
+                                </Box>
+                            )}
+
+                            {/* Pestaña 2: Log RMAN Completo */}
+                            {activeTab === 1 && (
+                                <Box sx={{ p: 0 }}>
+                                    <Box sx={{ 
+                                        p: 2, 
+                                        borderBottom: 1, 
+                                        borderColor: 'divider',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        backgroundColor: 'background.default'
+                                    }}>
+                                        <Typography variant="subtitle1">
+                                            Log de Ejecución RMAN
+                                        </Typography>
+                                        <Chip 
+                                            label={`${selectedLog.rman_log_content?.length || 0} caracteres`} 
+                                            size="small" 
+                                            variant="outlined" 
+                                        />
+                                    </Box>
+                                    <Box sx={{ 
+                                        p: 2, 
+                                        backgroundColor: 'grey.50',
+                                        fontFamily: 'monospace',
+                                        fontSize: '0.75rem',
+                                        lineHeight: '1.2',
+                                        height: '400px',
+                                        overflow: 'auto'
+                                    }}>
+                                        {formatRmanLog(selectedLog.rman_log_content)}
+                                    </Box>
+                                </Box>
+                            )}
+
+                            {/* Pestaña 3: Resumen del Log */}
+                            {activeTab === 2 && (
+                                <Box sx={{ p: 3 }}>
+                                    <Typography variant="h6" gutterBottom>
+                                        Resumen de Ejecución
+                                    </Typography>
+                                    
+                                    {selectedLog.rman_log_content && (
+                                        <Grid container spacing={2}>
+                                            <Grid item xs={12}>
+                                                <Alert 
+                                                    severity={
+                                                        selectedLog.status === 'completed' ? 'success' : 
+                                                        selectedLog.status === 'failed' ? 'error' : 'info'
+                                                    }
+                                                >
+                                                    <Typography variant="subtitle2">
+                                                        Estado: {selectedLog.status.toUpperCase()}
+                                                    </Typography>
+                                                    <Typography variant="body2">
+                                                        {selectedLog.message}
+                                                    </Typography>
+                                                </Alert>
+                                            </Grid>
+
+                                            {/* Estadísticas del log RMAN */}
+                                            <Grid item xs={12} md={6}>
+                                                <Paper variant="outlined" sx={{ p: 2 }}>
+                                                    <Typography variant="subtitle2" gutterBottom>
+                                                        Información del Backup
+                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                                        <Box display="flex" justifyContent="space-between">
+                                                            <Typography variant="body2">Duración:</Typography>
+                                                            <Typography variant="body2" fontWeight="medium">
+                                                                {selectedLog.duration_seconds ? `${selectedLog.duration_seconds}s` : 'N/A'}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Box display="flex" justifyContent="space-between">
+                                                            <Typography variant="body2">Tamaño:</Typography>
+                                                            <Typography variant="body2" fontWeight="medium">
+                                                                {selectedLog.backup_size_mb ? `${selectedLog.backup_size_mb.toFixed(2)} MB` : 'N/A'}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Box display="flex" justifyContent="space-between">
+                                                            <Typography variant="body2">Archivos:</Typography>
+                                                            <Typography variant="body2" fontWeight="medium">
+                                                                {selectedLog.rman_log_content?.includes('.BKP') ? 
+                                                                    (selectedLog.rman_log_content.match(/\.BKP/g) || []).length : 0
+                                                                }
+                                                            </Typography>
+                                                        </Box>
+                                                    </Box>
+                                                </Paper>
+                                            </Grid>
+
+                                            <Grid item xs={12} md={6}>
+                                                <Paper variant="outlined" sx={{ p: 2 }}>
+                                                    <Typography variant="subtitle2" gutterBottom>
+                                                        Análisis del Log
+                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                                        <Box display="flex" justifyContent="space-between">
+                                                            <Typography variant="body2">Líneas de log:</Typography>
+                                                            <Typography variant="body2" fontWeight="medium">
+                                                                {selectedLog.rman_log_content?.split('\n').length || 0}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Box display="flex" justifyContent="space-between">
+                                                            <Typography variant="body2">Errores:</Typography>
+                                                            <Typography variant="body2" fontWeight="medium" color="error.main">
+                                                                {(selectedLog.rman_log_content?.match(/RMAN-\d+/g) || []).length}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Box display="flex" justifyContent="space-between">
+                                                            <Typography variant="body2">Advertencias:</Typography>
+                                                            <Typography variant="body2" fontWeight="medium" color="warning.main">
+                                                                {(selectedLog.rman_log_content?.match(/Advertencia/g) || []).length}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Box>
+                                                </Paper>
+                                            </Grid>
+
+                                            {/* Vista previa del log */}
+                                            <Grid item xs={12}>
+                                                <Paper variant="outlined" sx={{ p: 2 }}>
+                                                    <Typography variant="subtitle2" gutterBottom>
+                                                        Vista Previa del Log
+                                                    </Typography>
+                                                    <Box sx={{ 
+                                                        backgroundColor: 'grey.100',
+                                                        p: 1,
+                                                        borderRadius: 1,
+                                                        maxHeight: '150px',
+                                                        overflow: 'auto',
+                                                        fontFamily: 'monospace',
+                                                        fontSize: '0.7rem'
+                                                    }}>
+                                                        {selectedLog.rman_log_content?.substring(0, 500)}...
+                                                    </Box>
+                                                </Paper>
+                                            </Grid>
+                                        </Grid>
+                                    )}
+                                </Box>
+                            )}
+                        </>
+                    )}
+                </Box>
             </DialogContent>
-            <DialogActions>
-            <Button onClick={() => setDetailDialogOpen(false)}>
-                Cerrar
-            </Button>
+            
+            <DialogActions sx={{ p: 2 }}>
+                <Button 
+                    onClick={() => {
+                        setDetailDialogOpen(false);
+                        setActiveTab(0);
+                    }}
+                >
+                    Cerrar
+                </Button>
             </DialogActions>
         </Dialog>
+        
         </Box>
     );
 };

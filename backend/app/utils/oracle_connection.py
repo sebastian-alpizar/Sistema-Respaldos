@@ -1,7 +1,7 @@
 import cx_Oracle
-from typing import Optional, Dict, Any
-from app.core.config import settings
+from typing import Optional, Dict, Any, List
 import logging
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -13,11 +13,18 @@ class OracleConnection:
         """Obtiene una conexión a la base de datos Oracle"""
         if cls._connection is None:
             try:
-                dsn = cx_Oracle.makedsn(
-                    settings.ORACLE_DSN.split(':')[0],
-                    int(settings.ORACLE_DSN.split(':')[1].split('/')[0]),
-                    service_name=settings.ORACLE_DSN.split('/')[1]
-                )
+                # Parsear DSN
+                if ':' in settings.ORACLE_DSN and '/' in settings.ORACLE_DSN:
+                    host_port, service_name = settings.ORACLE_DSN.split('/')
+                    if ':' in host_port:
+                        host, port = host_port.split(':')
+                    else:
+                        host, port = host_port, '1521'
+                    
+                    dsn = cx_Oracle.makedsn(host, port, service_name=service_name)
+                else:
+                    dsn = settings.ORACLE_DSN
+                
                 cls._connection = cx_Oracle.connect(
                     user=settings.ORACLE_USER,
                     password=settings.ORACLE_PASSWORD,
@@ -30,15 +37,7 @@ class OracleConnection:
         return cls._connection
     
     @classmethod
-    def close_connection(cls):
-        """Cierra la conexión a Oracle"""
-        if cls._connection is not None:
-            cls._connection.close()
-            cls._connection = None
-            logger.info("Conexión a Oracle cerrada")
-    
-    @classmethod
-    def execute_query(cls, query: str, params: Optional[Dict] = None) -> list:
+    def execute_query(cls, query: str, params: Optional[Dict] = None) -> List:
         """Ejecuta una consulta y retorna los resultados"""
         connection = cls.get_connection()
         cursor = connection.cursor()
@@ -79,7 +78,9 @@ class OracleConnection:
             
             # Información de la base de datos
             db_query = """
-                SELECT NAME, DBID, CREATED, LOG_MODE, OPEN_MODE 
+                SELECT NAME, DBID, CREATED, LOG_MODE, OPEN_MODE, 
+                        (SELECT COUNT(*) FROM V$DATAFILE) as datafiles,
+                        (SELECT COUNT(*) FROM V$TABLESPACE) as tablespaces
                 FROM V$DATABASE
             """
             db_result = cls.execute_query(db_query)
@@ -89,31 +90,44 @@ class OracleConnection:
                     'dbid': db_result[0][1],
                     'created': db_result[0][2],
                     'log_mode': db_result[0][3],
-                    'open_mode': db_result[0][4]
+                    'open_mode': db_result[0][4],
+                    'datafiles_count': db_result[0][5],
+                    'tablespaces_count': db_result[0][6]
                 })
             
             # Información de tablespaces
             ts_query = """
-                SELECT TABLESPACE_NAME, STATUS, CONTENTS 
-                FROM DBA_TABLESPACES 
+                SELECT TABLESPACE_NAME, STATUS, CONTENTS, 
+                        (SELECT SUM(BYTES) FROM DBA_DATA_FILES WHERE TABLESPACE_NAME = ts.TABLESPACE_NAME) as size_bytes
+                FROM DBA_TABLESPACES ts
                 ORDER BY TABLESPACE_NAME
             """
             ts_result = cls.execute_query(ts_query)
             info['tablespaces'] = [
-                {'name': row[0], 'status': row[1], 'contents': row[2]}
+                {
+                    'name': row[0], 
+                    'status': row[1], 
+                    'contents': row[2],
+                    'size_bytes': row[3] or 0
+                }
                 for row in ts_result
             ]
             
             # Información de schemas
             schema_query = """
-                SELECT USERNAME, ACCOUNT_STATUS, CREATED 
+                SELECT USERNAME, ACCOUNT_STATUS, CREATED, DEFAULT_TABLESPACE
                 FROM DBA_USERS 
                 WHERE ACCOUNT_STATUS = 'OPEN'
                 ORDER BY USERNAME
             """
             schema_result = cls.execute_query(schema_query)
             info['schemas'] = [
-                {'username': row[0], 'status': row[1], 'created': row[2]}
+                {
+                    'username': row[0], 
+                    'status': row[1], 
+                    'created': row[2],
+                    'default_tablespace': row[3]
+                }
                 for row in schema_result
             ]
             

@@ -57,6 +57,9 @@ const BackupForm = ({ open, onClose, onSave, strategy = null }) => {
             setFormData({
                 ...strategy,
                 schedule_time: new Date(`1970-01-01T${strategy.schedule_time}`),
+                tablespaces: strategy.tablespaces || [], 
+                schemas: strategy.schemas || [],  
+                tables: strategy.tables || [],
             });
         } else {
             setFormData({
@@ -349,7 +352,7 @@ const BackupForm = ({ open, onClose, onSave, strategy = null }) => {
                     <TextField
                         fullWidth
                         label="Tablespaces (separados por coma)"
-                        value={formData.tablespaces.join(',')}
+                        value={formData.tablespaces.join(',') }
                         onChange={handleArrayChange('tablespaces')}
                         placeholder="USERS, SYSTEM, TEMP"
                     />

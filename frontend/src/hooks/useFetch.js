@@ -13,7 +13,7 @@ export const useFetch = (url, options = {}) => {
                 
                 const response = await fetch(url, options);
                 if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 const result = await response.json();

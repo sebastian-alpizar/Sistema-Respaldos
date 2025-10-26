@@ -1,5 +1,7 @@
+// context/SchedulerContext.js - CORREGIDO Y UNIFICADO
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { backupService } from '../api/backupService';
+import { systemService } from '../api/systemService';
 
 const SchedulerContext = createContext();
 
@@ -13,10 +15,61 @@ export const useScheduler = () => {
 
 export const SchedulerProvider = ({ children }) => {
     const [strategies, setStrategies] = useState([]);
-    const [scheduledJobs, setScheduledJobs] = useState([]);
+    const [schedulerStatus, setSchedulerStatus] = useState({ 
+        running: false, 
+        scheduled_jobs_count: 0, 
+        scheduled_jobs: [] 
+    });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    // Estado del scheduler
+    const refreshSchedulerStatus = async () => {
+        try {
+            const response = await systemService.getSchedulerStatus();
+            setSchedulerStatus(response.data);
+        } catch (err) {
+            setError(err.response?.data?.detail || err.message);
+        }
+    };
+
+    const startScheduler = async () => {
+        try {
+            setLoading(true);
+            const response = await systemService.startScheduler();
+            setSchedulerStatus({
+                running: response.data.running,
+                scheduled_jobs_count: response.data.scheduled_jobs_count,
+                scheduled_jobs: response.data.scheduled_jobs
+            });
+            return response.data;
+        } catch (err) {
+            setError(err.response?.data?.detail || err.message);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const stopScheduler = async () => {
+        try {
+            setLoading(true);
+            const response = await systemService.stopScheduler();
+            setSchedulerStatus({
+                running: response.data.running,
+                scheduled_jobs_count: response.data.scheduled_jobs_count,
+                scheduled_jobs: response.data.scheduled_jobs
+            });
+            return response.data;
+        } catch (err) {
+            setError(err.response?.data?.detail || err.message);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Gestión de estrategias
     const fetchStrategies = async (activeOnly = false) => {
         try {
             setLoading(true);
@@ -30,25 +83,16 @@ export const SchedulerProvider = ({ children }) => {
         }
     };
 
-    const fetchScheduledJobs = async () => {
-        try {
-            const response = await backupService.getScheduledJobs();
-            setScheduledJobs(response.data.scheduled_jobs || []);
-        } catch (err) {
-            setError(err.response?.data?.detail || err.message);
-        }
-    };
-
     const createStrategy = async (strategyData) => {
         try {
             setError(null);
             const response = await backupService.createStrategy(strategyData);
             await fetchStrategies();
-            await fetchScheduledJobs();
+            await refreshSchedulerStatus(); // Actualizar jobs después de crear
             return response.data;
         } catch (err) {
             setError(err.response?.data?.detail || err.message);
-        throw err;
+            throw err;
         }
     };
 
@@ -57,7 +101,7 @@ export const SchedulerProvider = ({ children }) => {
             setError(null);
             const response = await backupService.updateStrategy(id, strategyData);
             await fetchStrategies();
-            await fetchScheduledJobs();
+            await refreshSchedulerStatus(); // Actualizar jobs después de actualizar
             return response.data;
         } catch (err) {
             setError(err.response?.data?.detail || err.message);
@@ -70,7 +114,7 @@ export const SchedulerProvider = ({ children }) => {
             setError(null);
             await backupService.deleteStrategy(id);
             await fetchStrategies();
-            await fetchScheduledJobs();
+            await refreshSchedulerStatus(); // Actualizar jobs después de eliminar
         } catch (err) {
             setError(err.response?.data?.detail || err.message);
             throw err;
@@ -93,7 +137,7 @@ export const SchedulerProvider = ({ children }) => {
             setError(null);
             const response = await backupService.toggleStrategy(id);
             await fetchStrategies();
-            await fetchScheduledJobs();
+            await refreshSchedulerStatus(); // Actualizar jobs después de toggle
             return response.data;
         } catch (err) {
             setError(err.response?.data?.detail || err.message);
@@ -112,25 +156,33 @@ export const SchedulerProvider = ({ children }) => {
         }
     };
 
+    // Efectos
     useEffect(() => {
         fetchStrategies();
-        fetchScheduledJobs();
+        refreshSchedulerStatus();
         
-        // Actualizar jobs programados cada minuto
+        // Actualizar estado del scheduler cada 30 segundos
         const interval = setInterval(() => {
-            fetchScheduledJobs();
-        }, 60000);
+            refreshSchedulerStatus();
+        }, 30000);
 
         return () => clearInterval(interval);
     }, []);
 
     const value = {
+        // Estado
         strategies,
-        scheduledJobs,
+        schedulerStatus,
         loading,
         error,
+        
+        // Gestión del scheduler
+        refreshSchedulerStatus,
+        startScheduler,
+        stopScheduler,
+        
+        // Gestión de estrategias
         fetchStrategies,
-        fetchScheduledJobs,
         createStrategy,
         updateStrategy,
         deleteStrategy,

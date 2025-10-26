@@ -1,5 +1,6 @@
 from typing import List, Optional
 import logging
+from datetime import datetime  # ✅ AGREGAR ESTA IMPORTACIÓN
 from app.core.email_utils import EmailUtils
 from app.core.config import settings
 
@@ -31,6 +32,11 @@ class EmailService:
                 html_body=html_body
             )
             
+            if success:
+                logger.info(f"✅ Email enviado exitosamente a {recipients}")
+            else:
+                logger.error(f"❌ Falló el envío de email a {recipients}")
+            
             return success
             
         except Exception as e:
@@ -45,7 +51,8 @@ class EmailService:
         end_time: str,
         duration: str,
         backup_size: Optional[float] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
+        backup_files_count: int = 0
     ) -> tuple[str, str, str]:
         """Crea el template para notificación de backup"""
         return self.email_utils.create_backup_notification_template(
@@ -55,31 +62,40 @@ class EmailService:
             end_time=end_time,
             duration=duration,
             backup_size=backup_size,
-            error_message=error_message
+            error_message=error_message,
+            backup_files_count=backup_files_count
         )
     
     async def send_test_email(self, test_email: str) -> bool:
         """Envía un email de prueba"""
         try:
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # ✅ CORREGIDO
+            
             subject = "Prueba de Notificación - Sistema de Respaldo Oracle"
-            text_body = """
-            Este es un email de prueba del Sistema de Gestión de Respaldo Oracle.
             
-            Si recibes este mensaje, la configuración SMTP es correcta.
+            # ✅ CORREGIDO: Usar f-strings correctamente
+            text_body = f"""
+Este es un email de prueba del Sistema de Gestión de Respaldo Oracle.
+
+Si recibes este mensaje, la configuración SMTP es correcta.
+
+Fecha y hora de envío: {current_time}
+"""
             
-            Fecha y hora de envío: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-            """
+            html_body = f"""
+<html>
+    <body>
+        <h2>Prueba de Notificación</h2>
+        <p>Este es un email de prueba del <strong>Sistema de Gestión de Respaldo Oracle</strong>.</p>
+        <p>Si recibes este mensaje, la configuración SMTP es correcta.</p>
+        <p><em>Fecha y hora de envío: {current_time}</em></p>
+    </body>
+</html>
+"""
             
-            html_body = """
-            <html>
-                <body>
-                    <h2>Prueba de Notificación</h2>
-                    <p>Este es un email de prueba del <strong>Sistema de Gestión de Respaldo Oracle</strong>.</p>
-                    <p>Si recibes este mensaje, la configuración SMTP es correcta.</p>
-                    <p><em>Fecha y hora de envío: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</em></p>
-                </body>
-            </html>
-            """
+            logger.info(f"Enviando email de prueba a: {test_email}")
+            logger.info(f"Usando SMTP: {settings.SMTP_SERVER}:{settings.SMTP_PORT}")
+            logger.info(f"Usuario SMTP: {settings.SMTP_USERNAME}")
             
             success = await self.send_notification(
                 subject=subject,
@@ -91,5 +107,5 @@ class EmailService:
             return success
             
         except Exception as e:
-            logger.error(f"Error enviando email de prueba: {str(e)}")
+            logger.error(f"Error enviando email de prueba: {str(e)}", exc_info=True)
             return False

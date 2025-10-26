@@ -1,33 +1,32 @@
-from fastapi import APIRouter, HTTPException, status
+import asyncio
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.database import get_db
 from app.core.config import settings
 from app.utils.oracle_connection import OracleConnection
 from app.services.email_service import EmailService
-from app.core.scheduler import BackupScheduler
+from app.core.scheduler import backup_scheduler
 from app.repositories.strategy_repo import StrategyRepository
 import logging
 
 router = APIRouter(prefix="/api/system", tags=["system"])
 
-oracle_connection = OracleConnection()
-email_service = EmailService()
-strategy_repo = StrategyRepository()
-scheduler = BackupScheduler()
-
 logger = logging.getLogger(__name__)
 
 @router.get("/health")
-async def health_check():
+async def health_check(db: AsyncSession = Depends(get_db)):
     """Verifica el estado del sistema"""
     try:
-        # Verificar conexión a Oracle
+        # Verificar conexión a Oracle CORRECTAMENTE
         oracle_healthy = False
         try:
-            oracle_healthy = oracle_connection.check_archivelog_mode() is not None
+            info = OracleConnection.get_database_info()
+            oracle_healthy = bool(info and 'name' in info)
         except:
-            pass
+            oracle_healthy = False
         
         # Verificar programador
-        scheduler_healthy = scheduler.scheduler.running
+        scheduler_healthy = backup_scheduler.scheduler.running
         
         # Verificar configuración de email
         email_configured = bool(settings.SMTP_USERNAME and settings.SMTP_PASSWORD)
@@ -41,24 +40,28 @@ async def health_check():
         }
         
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error en health check: {str(e)}"
-        )
+        return {
+            "status": "unhealthy",
+            "oracle_connection": "unknown", 
+            "scheduler": "unknown",
+            "email": "unknown",
+            "version": settings.APP_VERSION,
+            "error": str(e)
+        }
 
 @router.get("/database/info")
 async def get_database_info():
     """Obtiene información de la base de datos Oracle"""
     try:
-        info = oracle_connection.get_database_info()
+        info = OracleConnection.get_database_info()
         if not info:
             raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                status_code=503,
                 detail="No se pudo obtener información de la base de datos"
             )
         
         # Verificar modo ARCHIVELOG
-        archivelog_enabled = oracle_connection.check_archivelog_mode()
+        archivelog_enabled = OracleConnection.check_archivelog_mode()
         info['archivelog_enabled'] = archivelog_enabled
         info['archivelog_warning'] = not archivelog_enabled
         
@@ -68,7 +71,7 @@ async def get_database_info():
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error obteniendo información de la BD: {str(e)}"
         )
 
@@ -76,28 +79,29 @@ async def get_database_info():
 async def check_archivelog():
     """Verifica el estado del modo ARCHIVELOG"""
     try:
-        enabled = oracle_connection.check_archivelog_mode()
+        enabled = OracleConnection.check_archivelog_mode()
         return {
             "archivelog_enabled": enabled,
             "message": "Modo ARCHIVELOG habilitado" if enabled else "Modo ARCHIVELOG NO habilitado - Los backups pueden no ser consistentes"
         }
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error verificando modo ARCHIVELOG: {str(e)}"
         )
 
 @router.post("/email/test")
-async def send_test_email(email: str):
+async def send_test_email(email: str, db: AsyncSession = Depends(get_db)):
     """Envía un email de prueba"""
     try:
+        email_service = EmailService()
         success = await email_service.send_test_email(email)
         
         if success:
             return {"message": "Email de prueba enviado exitosamente"}
         else:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=500,
                 detail="No se pudo enviar el email de prueba. Verifique la configuración SMTP."
             )
             
@@ -105,37 +109,76 @@ async def send_test_email(email: str):
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error enviando email de prueba: {str(e)}"
         )
 
 @router.post("/scheduler/start")
-async def start_scheduler():
-    """Inicia el programador de backups"""
+async def start_scheduler(db: AsyncSession = Depends(get_db)):
+    """Inicia el programador"""
     try:
-        scheduler.start()
+        # Verificar estado actual
+        was_running = backup_scheduler.scheduler.running
         
-        # Reprogramar todas las estrategias activas
-        strategies = await strategy_repo.get_active_strategies()
-        scheduler.reschedule_all_strategies(strategies)
+        if not was_running:
+            # ✅ INICIALIZAR cargando estrategias desde la BD
+            await backup_scheduler.initialize(db)
+            await asyncio.sleep(0.5)  # Dar tiempo para que cargue
+            
+            message = "Scheduler iniciado correctamente con estrategias cargadas"
+        else:
+            message = "Scheduler ya estaba en ejecución"
         
-        return {"message": "Programador iniciado exitosamente"}
+        # Obtener estado actualizado
+        jobs = backup_scheduler.get_scheduled_jobs()
+        
+        return {
+            "status": "success",
+            "running": backup_scheduler.scheduler.running,
+            "was_running": was_running,
+            "scheduled_jobs_count": len(jobs),
+            "active_jobs_count": len(backup_scheduler.scheduler.get_jobs()),
+            "message": message,
+            "scheduled_jobs": jobs
+        }
         
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error iniciando programador: {str(e)}"
         )
 
 @router.post("/scheduler/stop")
 async def stop_scheduler():
-    """Detiene el programador de backups"""
+    """Detiene el programador"""
     try:
-        scheduler.shutdown()
-        return {"message": "Programador detenido exitosamente"}
+        # Verificar estado actual
+        was_running = backup_scheduler.scheduler.running
+        current_jobs = len(backup_scheduler.scheduler.get_jobs())
+        
+        if was_running:
+            backup_scheduler.shutdown()
+            
+            # Pequeña pausa para que se detenga completamente
+            import asyncio
+            await asyncio.sleep(0.1)
+        
+        # Obtener estado actualizado
+        jobs = backup_scheduler.get_scheduled_jobs()
+        
+        return {
+            "status": "success",
+            "running": backup_scheduler.scheduler.running,
+            "was_running": was_running,
+            "scheduled_jobs_count": len(jobs),
+            "active_jobs_count": len(backup_scheduler.scheduler.get_jobs()),
+            "message": "Scheduler detenido correctamente" if was_running else "Scheduler ya estaba detenido",
+            "scheduled_jobs": jobs
+        }
+        
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error deteniendo programador: {str(e)}"
         )
 
@@ -143,16 +186,16 @@ async def stop_scheduler():
 async def get_scheduler_status():
     """Obtiene el estado del programador"""
     try:
-        jobs = scheduler.get_scheduled_jobs()
+        jobs = backup_scheduler.get_scheduled_jobs()
         
         return {
-            "running": scheduler.scheduler.running,
+            "running": backup_scheduler.scheduler.running,
             "scheduled_jobs_count": len(jobs),
             "scheduled_jobs": jobs
         }
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error obteniendo estado del programador: {str(e)}"
         )
 
@@ -175,6 +218,6 @@ async def get_configuration():
         }
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error obteniendo configuración: {str(e)}"
         )
