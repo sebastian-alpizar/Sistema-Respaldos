@@ -143,20 +143,20 @@ Crea un archivo **`.env`** en la raíz del directorio **`backend/`** con las sig
 
 ```env
 # Configuración de Base de Datos Oracle
-ORACLE_USER=tu_usuario
+ORACLE_USER=system
 ORACLE_PASSWORD=tu_password
 ORACLE_DSN=localhost:1521/XE
 
-# Configuración SMTP para Notificaciones (No son necesarias por ahora)
+# Configuración SMTP para Notificaciones
 SMTP_SERVER=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=tu_email@gmail.com
-SMTP_PASSWORD=tu_app_password
-NOTIFICATION_EMAIL=destinatario@empresa.com
+SMTP_PORT=465
+SMTP_USERNAME=sebastian.alpizar.porras@est.una.ac.cr
+SMTP_PASSWORD=tgyb pmwr wzjs bdag (Esta contraseña se obtiene de https://myaccount.google.com/apppasswords)
+NOTIFICATION_EMAIL=sebastian.alpizar.porras@est.una.ac.cr
 
 # Configuración de la Aplicación
 DEBUG=True
-BACKUP_BASE_PATH=/backup/oracle
+BACKUP_BASE_PATH=./backups
 RETENTION_DAYS=30
 ```
 
